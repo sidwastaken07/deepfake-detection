@@ -11,7 +11,7 @@ Running log of accepted results and phase gates. Rules (from `docs/SPEC.md`):
 | Phase | Gate | Status | Commit |
 |---|---|---|---|
 | 0 Scaffold | soft | **passed** | `560d568` |
-| 1 Bonafide | soft | | |
+| 1 Bonafide | soft | in progress (code ready; Kaggle run pending) | |
 | 2 Text plan | soft | | |
 | 3 Generation | soft | | |
 | 4 Normalisation | soft | | |
@@ -73,3 +73,34 @@ not installed in the Phase 0 environment, so torch seeding was not exercised.
 different systems. Phase 7 and E1 need it, but it cannot be expressed in this schema without
 extending the enums. This needs a decision, e.g. a separate manifest family for external
 corpora, or adding `en` plus namespaced generator IDs.
+
+---
+
+## Phase 1: Bonafide corpus ingestion (in progress)
+
+The ingestion code, config (`configs/ingest_v1.yaml`) and Kaggle runbook (`docs/kaggle.md`)
+are in place. No corpus has been ingested yet, so the data criteria below are still open.
+
+**Definition of Done**
+
+- [ ] `manifests/bonafide_raw.jsonl` validates and contains both languages. *Pending the Kaggle run.*
+- [x] **The overlap register exists and is referenced here:**
+  [`docs/overlap_register.md`](docs/overlap_register.md), generated from `configs/roster.yaml`.
+  A test fails if the two drift apart. Every entry is marked unverified: it was compiled from
+  search summaries because the model cards couldn't be opened from the build environment, and
+  each must be re-checked against its model card before Phase 3.
+- [ ] Speaker histogram saved, and no speaker above 5% of clips. *Pending.* The merge run writes
+  `paper/figures/phase1_speakers_{ta,hi}.png`, logs each check to `results/`, and passes or
+  fails the 5% cap per language.
+
+**What the overlap register implies** (provisional until verified):
+
+- **IndicTTS** overlaps 5 of 8 generators (A01, A02, A04, A05, A06). It can serve as bonafide
+  only in the evaluation splits of A03, A07 and A08. Its main use is as cloning references.
+- **IndicVoices** overlaps A01 and A06, through IndicVoices-R, which is a restored subset of it.
+  If IV-R utterance IDs can be matched, an utterance-level exclusion would keep most of
+  IndicVoices usable for those generators.
+- **Common Voice** overlaps only A04 (the XTTS-v2 Hindi fine-tune). It is the cleanest bonafide
+  source, which is why it has the largest target.
+- **No Tamil XTTS-v2 fine-tune was found**, so A04 is Hindi-only. Tamil still has 6 generators
+  across 5 families (requirement: 6 and 3). Hindi has 8 across 5.

@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: install check lint test smoke
+.PHONY: install check lint test smoke overlap-register
 
 install:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -9,8 +9,8 @@ install:
 check: lint test
 
 lint:
-	ruff check src tests
-	ruff format --check src tests
+	ruff check src tests scripts
+	ruff format --check src tests scripts
 
 test:
 	$(PYTHON) -m pytest
@@ -18,3 +18,7 @@ test:
 # Dummy end-to-end run: random scores -> metrics -> results/<run_id>.jsonl
 smoke:
 	$(PYTHON) -m indispoof.cli smoke --config configs/phase0_smoke.yaml
+
+# Regenerate docs/overlap_register.md from configs/roster.yaml
+overlap-register:
+	$(PYTHON) scripts/render_overlap_register.py

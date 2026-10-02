@@ -1,0 +1,145 @@
+# Generator roster and training-overlap register (spec Phase 1 + Phase 3.1).
+#
+# Source of truth for docs/overlap_register.md (regenerate with `make overlap-register`;
+# a test fails if the two drift). Phase 6 reads `overlaps` to exclude a bonafide corpus from the
+# evaluation split of every generator that was trained on it.
+#
+# Every `training_data` / `license` entry below was compiled on 2026-10-02 from web-search
+# summaries of the model cards and papers listed in `sources`. Model cards could not be opened
+# directly from the build environment, so `verified: false` marks entries that must be re-checked
+# against the actual model card before Phase 3 synthesises with that generator.
+
+corpora:
+  commonvoice:
+    name: Mozilla Common Voice (Scripted Speech)
+    license: CC0-1.0
+    role: primary bonafide
+    sources:
+      - https://mozilladatacollective.com/datasets/cmn2gfvyp01geo107izoftfki
+  indicvoices:
+    name: AI4Bharat IndicVoices
+    license: CC-BY-4.0
+    role: bonafide diversity
+    note: >-
+      IndicVoices-R is a restored subset of IndicVoices (same speakers and utterances), so any
+      generator trained on IndicVoices-R overlaps IndicVoices. A finer, utterance-level exclusion
+      (only the IndicVoices-R subset) is possible later if IV-R utterance IDs can be matched.
+    sources:
+      - https://huggingface.co/datasets/ai4bharat/IndicVoices
+      - https://arxiv.org/abs/2409.05356
+  indictts:
+    name: IndicTTS (IIT Madras), SPRINGLab Hugging Face release
+    license: CC-BY-4.0
+    role: bonafide + cloning references
+    note: Two speakers per language (one male, one female), 48 kHz studio recordings.
+    sources:
+      - https://huggingface.co/datasets/SPRINGLab/IndicTTS_Tamil
+      - https://huggingface.co/datasets/SPRINGLab/IndicTTS-Hindi
+      - https://www.iitm.ac.in/donlab/indictts/database
+
+generators:
+  A01:
+    system: IndicF5
+    checkpoint: ai4bharat/IndicF5
+    family: flow_matching
+    cloning: zero-shot
+    langs: [ta, hi]
+    license: MIT
+    training_data: [Rasa, IndicTTS, LIMMITS, IndicVoices-R]
+    overlaps: [indictts, indicvoices]
+    verified: false
+    sources:
+      - https://github.com/AI4Bharat/IndicF5
+      - https://huggingface.co/ai4bharat/IndicF5
+  A02:
+    system: AI4Bharat Indic-TTS (FastPitch + HiFi-GAN V1)
+    checkpoint: AI4Bharat/Indic-TTS release checkpoints
+    family: fastpitch_gan
+    cloning: none
+    langs: [ta, hi]
+    license: MIT
+    training_data: [IndicTTS]
+    overlaps: [indictts]
+    verified: false
+    sources:
+      - https://arxiv.org/abs/2211.09536
+      - https://github.com/AI4Bharat/Indic-TTS
+  A03:
+    system: MMS-TTS
+    checkpoint: facebook/mms-tts-tam, facebook/mms-tts-hin
+    family: vits
+    cloning: none
+    langs: [ta, hi]
+    license: CC-BY-NC-4.0
+    training_data: [MMS-lab (New Testament readings)]
+    overlaps: []
+    verified: false
+    sources:
+      - https://huggingface.co/facebook/mms-tts-tam
+      - https://arxiv.org/abs/2305.13516
+  A04:
+    system: XTTS-v2 Hindi fine-tune
+    checkpoint: Abhinay45/XTTS-Hindi-finetuned
+    family: ar_codec_lm
+    cloning: zero-shot
+    langs: [hi]
+    license: Coqui Public Model License (non-commercial)
+    training_data: [XTTS-v2 base corpus, Common Voice 18 (hi), IndicTTS (hi)]
+    overlaps: [commonvoice, indictts]
+    verified: false
+    note: >-
+      The spec lists ta and hi, but no Tamil XTTS-v2 fine-tune was found. A04 is Hindi-only
+      unless one turns up; Tamil family coverage still holds without it.
+    sources:
+      - https://huggingface.co/Abhinay45/XTTS-Hindi-finetuned
+  A05:
+    system: svara-TTS v1
+    checkpoint: kenpath/svara-tts-v1
+    family: ar_codec_lm
+    cloning: zero-shot
+    langs: [ta, hi]
+    license: Apache-2.0
+    training_data: [SYSPIN, RASA, IndicTTS, SPICOR]
+    overlaps: [indictts]
+    verified: false
+    sources:
+      - https://huggingface.co/kenpath/svara-tts-v1
+  A06:
+    system: F5-Hindi
+    checkpoint: SPRINGLab/F5-Hindi-24KHz
+    family: flow_matching
+    cloning: zero-shot
+    langs: [hi]
+    license: CC-BY-4.0
+    training_data: [IndicTTS (hi), IndicVoices-R (hi)]
+    overlaps: [indictts, indicvoices]
+    verified: false
+    sources:
+      - https://huggingface.co/SPRINGLab/F5-Hindi-24KHz
+  A07:
+    system: kNN-VC
+    checkpoint: bshall/knn-vc (prematched HiFi-GAN)
+    family: vc
+    cloning: conversion
+    langs: [ta, hi]
+    license: MIT
+    training_data: [WavLM-Large pretraining (English), LibriSpeech train-clean-100 (vocoder)]
+    overlaps: []
+    verified: false
+    sources:
+      - https://github.com/bshall/knn-vc
+      - https://arxiv.org/abs/2305.18975
+  A08:
+    system: FreeVC
+    checkpoint: OlaWod/FreeVC
+    family: vc
+    cloning: conversion
+    langs: [ta, hi]
+    license: MIT
+    training_data: [VCTK, WavLM-Large pretraining (English)]
+    overlaps: []
+    verified: false
+    note: Chosen over RVC because RVC needs a model trained per target voice.
+    sources:
+      - https://github.com/OlaWod/FreeVC
+      - https://arxiv.org/abs/2210.15418

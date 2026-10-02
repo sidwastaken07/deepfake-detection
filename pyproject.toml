@@ -16,7 +16,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7.4", "ruff>=0.4"]
-# Needed from Phase 1 onwards; kept optional so the Phase 0 harness installs anywhere.
+# Phase 1 ingestion: audio info, parquet shards, Hugging Face download, figures.
+data = ["soundfile>=0.12", "pyarrow>=14", "huggingface_hub>=0.23", "matplotlib>=3.7"]
+# Needed from Phase 3 onwards.
 audio = ["soundfile>=0.12", "torch>=2.1", "torchaudio>=2.1"]
 
 [project.scripts]

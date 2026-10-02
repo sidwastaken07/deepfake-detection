@@ -14,7 +14,8 @@ phase; accepted results and gate outcomes are logged in [`RESULTS.md`](RESULTS.m
 | Phase | State |
 |---|---|
 | 0 Scaffold and reproducibility harness | done (see RESULTS.md) |
-| 1 Bonafide ingestion → 10 Release | not started |
+| 1 Bonafide ingestion | code ready; run on Kaggle per [`docs/kaggle.md`](docs/kaggle.md) |
+| 2 Text plan → 10 Release | not started |
 
 ## Setup
 
@@ -22,7 +23,8 @@ Python 3.10 or 3.11.
 
 ```bash
 pip install -e ".[dev]"          # harness, metrics, tests
-pip install -e ".[dev,audio]"    # + torch/torchaudio/soundfile, needed from Phase 1
+pip install -e ".[dev,data]"     # + soundfile, pyarrow, huggingface_hub, matplotlib (Phase 1)
+pip install -e ".[dev,audio]"    # + torch/torchaudio (Phase 3 onwards)
 make check                       # ruff lint + format check, then pytest
 make smoke                       # dummy end-to-end run -> results/<run_id>.jsonl
 ```
@@ -39,10 +41,16 @@ results/      one append-only JSONL file per run
 paper/        generated LaTeX tables and figures
 src/indispoof/
   data/manifest.py   manifest schema: strict read / write / validate / merge / hash
+  data/ingest.py     Phase 1 corpus readers, speaker-balanced sampling, checks, histograms
+  data/fetch.py      seeded, size-capped Hugging Face shard download
+  data/roster.py     generator roster + training-overlap register (configs/roster.yaml)
+  data/storage.py    verify / pack the audio a manifest references
   eval/metrics.py    EER, AUC, minDCF, actDCF
   run.py             run context: config resolution, seeding, results file
   cli.py             `indispoof` command
 docs/SPEC.md  the build specification
+docs/overlap_register.md  which generator was trained on which bonafide corpus (generated)
+docs/kaggle.md  how to run the data-heavy phases on Kaggle
 ```
 
 ## Conventions

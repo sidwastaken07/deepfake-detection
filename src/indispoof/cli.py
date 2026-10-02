@@ -16,7 +16,6 @@ NOT_IMPLEMENTED = 2
 
 # command -> (phase that implements it, help text)
 STUBS: dict[str, tuple[int, str]] = {
-    "ingest": (1, "ingest a bonafide corpus into a manifest"),
     "plan-text": (2, "sample the synthesis text plan"),
     "generate": (3, "synthesise spoof audio with one generator"),
     "qc": (3, "run the ASR quality gate over a spoof manifest"),
@@ -54,7 +53,17 @@ def build_parser() -> argparse.ArgumentParser:
         add_args(p)
         p.set_defaults(handler=_not_implemented, phase=phase)
 
-    stub("ingest", lambda p: (p.add_argument("--corpus"), p.add_argument("--lang")))
+    ingest = sub.add_parser("ingest", help="ingest a bonafide corpus into a manifest [Phase 1]")
+    _add_run_args(ingest, True)
+    ingest.add_argument("--corpus", help="corpus key from the config")
+    ingest.add_argument("--lang", choices=["ta", "hi"])
+    mode = ingest.add_mutually_exclusive_group()
+    mode.add_argument("--merge", action="store_true", help="merge part manifests, run checks")
+    mode.add_argument("--download", action="store_true", help="fetch shards from Hugging Face")
+    mode.add_argument("--inspect", action="store_true", help="print schema of the first shard")
+    ingest.add_argument("--dry-run", action="store_true", help="with --download: list only")
+    ingest.add_argument("--allow-large", action="store_true", help="with --download: exceed max_gb")
+    ingest.set_defaults(handler=_ingest)
     stub(
         "plan-text",
         lambda p: (
@@ -101,6 +110,55 @@ def _not_implemented(args: argparse.Namespace) -> int:
         file=sys.stderr,
     )
     return NOT_IMPLEMENTED
+
+
+def _ingest(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from indispoof.data import ingest
+    from indispoof.run import RunContext, load_config
+
+    if args.merge:
+        with RunContext(args.config, args.overrides, args.seed) as ctx:
+            ingest.merge_parts(ctx)
+        return 0
+    if not (args.corpus and args.lang):
+        print("indispoof ingest: --corpus and --lang are required", file=sys.stderr)
+        return 1
+
+    if args.download or args.inspect:
+        config = load_config(args.config, args.overrides, args.seed)
+        ccfg, lcfg = ingest.corpus_config(config, args.corpus, args.lang)
+        if args.inspect:
+            files = sorted(Path(lcfg["root"]).glob(lcfg.get("files", "**/*.parquet")))
+            if not files:
+                print(f"no local files match {lcfg['root']}/{lcfg.get('files')}", file=sys.stderr)
+                return 1
+            print(ingest.inspect_parquet(files[0]))
+            return 0
+        from indispoof.data.fetch import fetch
+
+        hf = lcfg.get("hf")
+        if not hf:
+            print(
+                f"{args.corpus}/{args.lang} has no 'hf' source; see docs/kaggle.md", file=sys.stderr
+            )
+            return 1
+        fetch(
+            hf["repo_id"],
+            hf["pattern"],
+            int(hf["n_files"]),
+            Path(lcfg["root"]),
+            seed=config["seed"],
+            max_gb=float(hf.get("max_gb", 20)),
+            allow_large=args.allow_large,
+            dry_run=args.dry_run,
+        )
+        return 0
+
+    with RunContext(args.config, args.overrides, args.seed) as ctx:
+        ingest.ingest_corpus(ctx, args.corpus, args.lang)
+    return 0
 
 
 def _smoke(args: argparse.Namespace) -> int:

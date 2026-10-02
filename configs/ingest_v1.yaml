@@ -1,0 +1,70 @@
+# Phase 1 bonafide ingestion. One run per corpus x language, then one merge run:
+#   indispoof ingest --config configs/ingest_v1.yaml --corpus commonvoice --lang ta
+#   ...
+#   indispoof ingest --config configs/ingest_v1.yaml --merge
+# Runbook: docs/kaggle.md. Every root is relative to the repo root and lies under data/raw/.
+name: ingest_v1
+seed: 1337
+results_dir: results
+parts_dir: manifests/bonafide_raw_parts   # one immutable part manifest per corpus x lang
+output: manifests/bonafide_raw.jsonl
+figures_dir: paper/figures
+
+duration_s: {min: 1.0, max: 20.0}
+min_script_ratio: 0.5   # share of letters in the native script; permissive so code-mixed text survives for Phase 2
+
+checks:                 # Phase 1 Definition of Done, per language
+  min_utts_per_lang: 2000
+  min_corpora_per_lang: 2
+  min_speakers_per_lang: 100
+  max_speaker_share: 0.05
+
+# Volume per language: 1600 Common Voice + 1000 IndicVoices + 150 IndicTTS = 2750 before any
+# shortfall. IndicTTS has two speakers per language, so 75 clips each keeps both under 5%.
+corpora:
+  commonvoice:
+    format: commonvoice
+    license: CC0-1.0
+    version: cv-corpus-25.0-2026-03-09
+    langs:
+      ta: {root: data/raw/commonvoice/cv-corpus-25.0-2026-03-09/ta, target: 1600, max_per_speaker: 15}
+      hi: {root: data/raw/commonvoice/cv-corpus-25.0-2026-03-09/hi, target: 1600, max_per_speaker: 15}
+
+  indicvoices:
+    format: hf_parquet
+    license: CC-BY-4.0
+    # Column names unverified: run `indispoof ingest ... --inspect` on one shard and fix if needed.
+    columns: {audio: audio_filepath, text: normalized, speaker: speaker_id, duration: duration}
+    drop_text_regex: '[\[\]<>{}]'   # annotation tags such as [noise]
+    langs:
+      ta:
+        root: data/raw/indicvoices
+        files: "tamil/**/*.parquet"
+        target: 1000
+        max_per_speaker: 10
+        hf: {repo_id: ai4bharat/IndicVoices, pattern: "tamil/*.parquet", n_files: 6, max_gb: 20}
+      hi:
+        root: data/raw/indicvoices
+        files: "hindi/**/*.parquet"
+        target: 1000
+        max_per_speaker: 10
+        hf: {repo_id: ai4bharat/IndicVoices, pattern: "hindi/*.parquet", n_files: 6, max_gb: 20}
+
+  indictts:
+    format: hf_parquet
+    license: CC-BY-4.0
+    columns: {audio: audio, text: text, speaker: gender}
+    speaker_template: "{corpus}_{lang}_{speaker}"   # speakers differ per language
+    langs:
+      ta:
+        root: data/raw/indictts/ta
+        files: "data/*.parquet"
+        target: 150
+        max_per_speaker: 75
+        hf: {repo_id: SPRINGLab/IndicTTS_Tamil, pattern: "data/*.parquet", n_files: 2, max_gb: 20}
+      hi:
+        root: data/raw/indictts/hi
+        files: "data/*.parquet"
+        target: 150
+        max_per_speaker: 75
+        hf: {repo_id: SPRINGLab/IndicTTS-Hindi, pattern: "data/*.parquet", n_files: 2, max_gb: 20}
