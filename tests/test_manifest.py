@@ -154,6 +154,11 @@ def test_read_rejects_corrupted_row(tmp_path, name):
         read_manifest(p)
 
 
+def test_utt_id_condition_suffix():
+    r = validate_row(bonafide(utt_id="ta_commonvoice_A00_000123-opus_12k", condition="opus_12k"))
+    assert r.utt_id.endswith("-opus_12k")
+
+
 def test_negative_qc_wer_rejected():
     with pytest.raises(ManifestError, match="qc_wer"):
         validate_row(spoof(qc_wer=-0.1))

@@ -48,9 +48,10 @@ CONDITIONS = (
 PROCESSED_SAMPLE_RATE = 16000
 PROCESSED_ROOT = PurePosixPath("data/processed")
 
-# <lang>_<source>_<gen>_<index>; index may carry dash-separated suffixes (e.g. a condition).
+# <lang>_<source>_<gen>_<index>. source has no underscores, so the index may carry
+# suffixes such as a condition (ta_commonvoice_A00_000123-opus_12k) without ambiguity.
 UTT_ID_RE = re.compile(
-    r"^(?P<lang>[a-z]{2})_(?P<source>[a-z0-9]+)_(?P<gen>A\d{2})_(?P<index>[0-9A-Za-z][0-9A-Za-z-]*)$"
+    r"^(?P<lang>[a-z]{2})_(?P<source>[a-z0-9]+)_(?P<gen>A\d{2})_(?P<index>[0-9A-Za-z][0-9A-Za-z_-]*)$"
 )
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
