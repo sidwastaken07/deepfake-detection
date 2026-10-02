@@ -1,0 +1,11 @@
+# Phase 0 harness check. Random scores, synthetic manifest, no audio.
+# Run: indispoof smoke --config configs/phase0_smoke.yaml
+name: phase0_smoke
+seed: 0
+results_dir: results
+smoke:
+  n_per_class_per_lang: 250
+  dcf:            # ASVspoof 5 countermeasure cost parameters
+    pi_spoof: 0.05
+    c_miss: 1.0
+    c_fa: 10.0

@@ -1,0 +1,28 @@
+# Audio and corpora never enter git; manifests (hashes) are the record.
+data/raw/*
+data/interim/*
+data/processed/*
+!data/*/.gitkeep
+
+# Training artefacts
+runs/
+checkpoints/
+*.pt
+*.ckpt
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
