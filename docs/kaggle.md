@@ -1,8 +1,26 @@
 # Running IndiSpoof on Kaggle
 
 The code is developed in this repo, but the data-heavy steps run in a Kaggle notebook (T4 GPU).
-This page covers the one-time setup and then Phase 1 (bonafide ingestion) step by step. Each
-block below is one notebook cell.
+This page covers the one-time setup and then Phase 1 (bonafide ingestion).
+
+**Recommended: the ready-made notebook.** Do the one-time setup below, then:
+
+1. In Kaggle, choose *Create → New Notebook → File → Import Notebook*. Give it
+   [`notebooks/phase1_kaggle.ipynb`](../notebooks/phase1_kaggle.ipynb): either upload the file
+   (download it from GitHub first) or use its GitHub link if your Kaggle account is linked to
+   GitHub.
+2. Turn Internet on and attach the three secrets.
+3. Paste the Hindi Common Voice ID into the settings cell, then *Run All*.
+
+The notebook works out the Common Voice release folder, IndicVoices' shard layout and the parquet
+column names by itself, and writes them to `configs/ingest_v1_kaggle.yaml`. It stops with a
+message instead of guessing:
+
+- when a download would exceed 20 GB;
+- when a layout isn't recognised;
+- when a secret is missing.
+
+The step-by-step cells under "Phase 1 cells" below are the manual fallback.
 
 ## One-time setup
 

@@ -14,7 +14,7 @@ phase; accepted results and gate outcomes are logged in [`RESULTS.md`](RESULTS.m
 | Phase | State |
 |---|---|
 | 0 Scaffold and reproducibility harness | done (see RESULTS.md) |
-| 1 Bonafide ingestion | code ready; run on Kaggle per [`docs/kaggle.md`](docs/kaggle.md) |
+| 1 Bonafide ingestion | code ready; run [`notebooks/phase1_kaggle.ipynb`](notebooks/phase1_kaggle.ipynb) on Kaggle ([`docs/kaggle.md`](docs/kaggle.md)) |
 | 2 Text plan → 10 Release | not started |
 
 ## Setup
@@ -45,12 +45,14 @@ src/indispoof/
   data/fetch.py      seeded, size-capped Hugging Face shard download
   data/roster.py     generator roster + training-overlap register (configs/roster.yaml)
   data/storage.py    verify / pack the audio a manifest references
+  data/discover.py   detect corpus layouts and parquet columns (used by the Kaggle notebook)
   eval/metrics.py    EER, AUC, minDCF, actDCF
   run.py             run context: config resolution, seeding, results file
   cli.py             `indispoof` command
 docs/SPEC.md  the build specification
 docs/overlap_register.md  which generator was trained on which bonafide corpus (generated)
 docs/kaggle.md  how to run the data-heavy phases on Kaggle
+notebooks/    Kaggle notebooks (thin runners; logic stays in src/)
 ```
 
 ## Conventions

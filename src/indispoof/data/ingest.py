@@ -38,6 +38,7 @@ from indispoof.data.manifest import (
 
 RAW_ROOT = PurePosixPath("data/raw")
 CORPUS_KEY_RE = re.compile(r"^[a-z0-9]+$")
+MISSING_SPEAKER = frozenset({"", "none", "nan", "null", "unknown"})
 
 # Unicode blocks of each language's native script.
 SCRIPT_RANGES: dict[str, tuple[tuple[int, int], ...]] = {
@@ -303,7 +304,11 @@ def select(
     for c in reader.candidates():
         n_total += 1
         text = normalize_text(c.text)
-        if not text:
+        speaker = c.speaker.strip()
+        if speaker.lower() in MISSING_SPEAKER:
+            # Pooling unknown speakers would fake one prolific speaker and break disjointness.
+            rejected["no_speaker"] += 1
+        elif not text:
             rejected["empty_text"] += 1
         elif drop is not None and drop.search(text):
             rejected["text_regex"] += 1
@@ -312,7 +317,7 @@ def select(
         elif c.duration_hint is not None and not min_duration <= c.duration_hint <= max_duration:
             rejected["duration_hint"] += 1
         else:
-            pool.append(Candidate(c.native_id, c.speaker, text, c.duration_hint, c.locator))
+            pool.append(Candidate(c.native_id, speaker, text, c.duration_hint, c.locator))
 
     order = priority_order(pool, rng)
     accepted: list[Accepted] = []

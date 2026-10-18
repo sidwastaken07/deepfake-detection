@@ -7,7 +7,7 @@ name = "indispoof"
 version = "0.0.1"
 description = "IndiSpoof: a cross-lingual benchmark for audio deepfake detection in Indic languages"
 readme = "README.md"
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.24",
     "scipy>=1.10",
